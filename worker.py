@@ -1,6 +1,7 @@
-from storage import load_data, extract_columns
+from storage import load_data, extract_columns, save_to_csv, extr_c
 from calculator import full_analysis_polynomial
 import numpy as np
+import matplotlib.pyplot as plt
 
 def scale_dimensions(width, height, width_scale=0.99, height_scale=0.95):
     """Scale the dimensions based on given scaling factors."""
@@ -20,24 +21,24 @@ def main():
     temperatures = [0.5, 0.7, 1.0, 1.6, 5, 7, 10, 14, 20, 35]
 
     # Filepaths and labels
-    name = 'YbTi3Sb4-1'
-    filepath = 'ad.csv'
-    output_dir = f'/root/research/publications/'+name+'/fft_angles/'
+    name = 'results'
+    filepath = 'PracticeData.txt'
+    output_dir = f'./data/'+name+'/fft/'
 
-    data_ad = load_data(filepath)
+    data = load_data(f'./data/{filepath}')
 
-    # Extract x and y data
-    x_ad, y_ad = extract_columns(data_ad)
+    x, y = extr_c(data)
     
-    
-     # Run full analysis on temperature data
-    x, y, x_filtered, y_filtered, x_poly, y_poly, x_int, y_int = full_analysis_polynomial(x_ad[:, 9].tolist(), y_ad[:, 9].tolist())
+    x, y = full_analysis_polynomial(x, y)
     '''for num, item in enumerate(angles):
         x, y = full_analysis_polynomial(x_ad[:, num].tolist(), y_ad[:, num].tolist())
         with open(f'{output_dir}{item}.txt', 'w') as f:
             for c1, c2 in zip(x, y):
                 f.write(f'{c1}\t{c2}\n')
     '''
+    plt.plot(x, y)
+    plt.show()
+    save_to_csv([x, y], output_dir,f'{name}.csv' )
 
 if __name__ == "__main__":
     main()

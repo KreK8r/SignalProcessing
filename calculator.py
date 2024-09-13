@@ -9,12 +9,17 @@ from numpy.fft import fft, fftfreq
 
 
 def trim_data(field, y):
-    minimal = min(field) + 0.01
-    maximum = max(field) - 0.01
+    minimal = min(field) + 0.03
+    maximum = max(field) - 0.03 
     filtered = [(x, y_val) for x, y_val in zip(field, y) if x >= minimal]
+    print(f"Filtered (after minimal): {filtered}")
     filtered2 = [(x, y_val) for x, y_val in filtered if x <= maximum]
+    print(f"Filtered2 (after maximal): {filtered2}")
+    if not filtered2:
+        raise ValueError("Filtered data is empty after applying trimming.")
     x_filtered, y_filtered = zip(*filtered2)
     return list(x_filtered), list(y_filtered)
+
 
 def remove_duplicates(x, y):
     """Removes duplicate x-values by averaging the corresponding y-values."""
@@ -86,15 +91,13 @@ def compute_difference(x_filtered, y_filtered, x_lowess, y_lowess):
     difference = y_filtered_interp - y_lowess_interp
     return x_common.tolist(), difference.tolist()
 
-def perform_fft(x, y, zero_padding=0):
+def perform_fft(x, y):
     """
     Performs Fast Fourier Transform (FFT) on interpolated data using a rectangular window (no window).
-    Adds zero padding if specified.
 
     Parameters:
     - x: A list or array of x-values (assumed to be uniformly spaced).
     - y: A list or array of y-values corresponding to the x-values.
-    - zero_padding: Number of zeros to pad to the end of y for higher resolution.
 
     Returns:
     - xf: The frequency components.
@@ -106,20 +109,16 @@ def perform_fft(x, y, zero_padding=0):
     # Remove the DC component (mean value)
     y_detrended = y - np.mean(y)
     
-    # Apply zero padding to the y-values
-    y_padded = np.pad(y_detrended, (0, zero_padding), 'constant')
-    
     # Perform FFT
-    yf = fft(y_padded)
+    yf = fft(y_detrended)
     
     # Zero out the 0 frequency component
     yf[0] = 0
     
-    N_padded = len(y_padded)  # Adjust the length after padding
-    xf = fftfreq(N_padded, T)[:N_padded//2]  # Only positive frequencies
+    xf = fftfreq(N, T)[:N//2]  # Only positive frequencies
 
     # Return frequency and amplitude
-    return xf, 2.0/N_padded * np.abs(yf[:N_padded//2])
+    return xf, 2.0/N * np.abs(yf[:N//2])
 
 def full_analysis_lowess(x, y, frac_values=[0.3, 0.35, 0.4]):
     x_trim, y_trim = trim_data(x, y)
@@ -180,16 +179,8 @@ def full_analysis_lowess(x, y, frac_values=[0.3, 0.35, 0.4]):
 
 
 def full_analysis_polynomial(x, y, degree=3):
-    df = pd.DataFrame(x, columns=['Column1'])
-    df.to_csv('lol1.csv', index=False)
-    df = pd.DataFrame(y, columns=['Column1'])
-    df.to_csv('lol2.csv', index=False)
     x_trim, y_trim = trim_data(x, y)
     x_trim, y_trim = remove_duplicates(x_trim, y_trim)
-    df = pd.DataFrame(x_trim, columns=['Column1'])
-    df.to_csv('extra1.csv', index=False)
-    df = pd.DataFrame(y_trim, columns=['Column1'])
-    df.to_csv('extra2.csv', index=False)
 
     plt.plot(x_trim, y_trim, label='data')
     plt.xlabel('Field')
@@ -201,11 +192,6 @@ def full_analysis_polynomial(x, y, degree=3):
     cutoff = 5
     x_filtered, y_filtered = filter_bot(x_trim, y_trim, cutoff)
     x_poly, y_poly = polynomial_fit(x_filtered, y_filtered, degree)
-    df = pd.DataFrame(x_filtered, columns=['Column1'])
-    df.to_csv('output1.csv', index=False)
-    df = pd.DataFrame(y_filtered, columns=['Column1'])
-    df.to_csv('output2.csv', index=False)
-    
 
     interp = interp1d(x_filtered, y_filtered, kind='cubic', fill_value='extrapolate')
     x_filtered = np.linspace(min(x_filtered), max(x_filtered), num=5000)

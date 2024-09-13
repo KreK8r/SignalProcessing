@@ -9,6 +9,46 @@ def extract_columns(data):
     y_data = data.iloc[:, 1::2].values
     return x_data, y_data
 
+import numpy as np
+
+def load_data(filepath):
+    """Load data from a file."""
+    with open(filepath, 'r') as file:
+        data = file.readlines()
+    return data
+
+def extr_c(data):
+    """Extract columns from the data."""
+    x = []
+    y = []
+    for line in data:
+        if '\t' in line:
+            columns = line.strip().split('\t')
+            try:
+                x.append(float(columns[0]))
+                y.append(float(columns[1]))
+            except ValueError as e:
+                print(f"Skipping line due to error: {e}")
+                continue
+    return np.array(x), np.array(y)
+
+def main():
+    filepath = 'data/PracticeData.txt'  # Adjust the path as needed
+
+    # Load data from file
+    data = load_data(filepath)
+    
+    # Extract x and y columns
+    x, y = extract_columns(data)
+    
+    # Print the extracted data for verification
+    print("x:", x)
+    print("y:", y)
+
+if __name__ == "__main__":
+    main()
+
+
 def save_to_csv(data, output_dir, filename, columns=None):
     """
     Save data to a CSV file.
