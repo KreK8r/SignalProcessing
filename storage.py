@@ -32,22 +32,6 @@ def extr_c(data):
                 continue
     return np.array(x), np.array(y)
 
-def main():
-    filepath = 'data/PracticeData.txt'  # Adjust the path as needed
-
-    # Load data from file
-    data = load_data(filepath)
-    
-    # Extract x and y columns
-    x, y = extract_columns(data)
-    
-    # Print the extracted data for verification
-    print("x:", x)
-    print("y:", y)
-
-if __name__ == "__main__":
-    main()
-
 
 def save_to_csv(data, output_dir, filename, columns=None):
     """
